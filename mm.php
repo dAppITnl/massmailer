@@ -2,11 +2,18 @@
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $from = $_POST['from'];
     $subject = $_POST['subject'];
-    $body = $_POST['body'];
+    $statusFilter = $_POST['status'];
     $csvFile = $_FILES['csvfile']['tmp_name'];
+    $bodyFile = $_FILES['bodyfile']['tmp_name'];
     $emailCount = 0;
 
-    if (!empty($from) && !empty($subject) && !empty($body) && is_uploaded_file($csvFile)) {
+    if (!empty($from) && !empty($subject) && !empty($statusFilter) && is_uploaded_file($csvFile) && is_uploaded_file($bodyFile)) {
+        $bodyTemplate = file_get_contents($bodyFile);
+        if ($bodyTemplate === false) {
+            echo "<p>Failed to read the body file.</p>";
+            exit;
+        }
+
         $handle = fopen($csvFile, 'r');
         if ($handle) {
             // Skip the header line
@@ -16,14 +23,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Map CSV columns to variables
                 [$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
 
-                // Replace placeholders in subject and body
-                $personalizedSubject = str_replace('[[FirstName]]', $firstName, $subject);
-                $personalizedBody = str_replace('[[FirstName]]', $firstName, $body);
+                // Only send emails for rows with the selected status
+                if (trim($status) === $statusFilter) {
+                    // Replace placeholders in subject and body
+                    $personalizedSubject = str_replace('[[FirstName]]', $firstName, $subject);
+                    $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
 
-                // Send the email
-                $headers = "From: $from\r\n";
-                if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
-                    $emailCount++;
+                    // Send the email
+                    $headers = "From: $from\r\n";
+                    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+                    if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
+                        $emailCount++;
+                    }
+
+                    // Wait for 1 second before sending the next email
+                    sleep(1);
                 }
             }
             fclose($handle);
@@ -33,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             echo "<p>Failed to open the CSV file.</p>";
         }
     } else {
-        echo "<p>Please fill in all fields and upload a valid CSV file.</p>";
+        echo "<p>Please fill in all fields and upload the required files.</p>";
     }
 }
 ?>
@@ -54,11 +68,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <label for="subject">Subject:</label><br>
         <input type="text" name="subject" id="subject" required><br><br>
 
-        <label for="body">Body:</label><br>
-        <textarea name="body" id="body" rows="5" required></textarea><br><br>
+        <label for="status">Send Emails to Status:</label><br>
+        <select name="status" id="status" required>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Active">Active</option>
+        </select><br><br>
 
         <label for="csvfile">Upload CSV File:</label><br>
         <input type="file" name="csvfile" id="csvfile" accept=".csv" required><br><br>
+
+        <label for="bodyfile">Upload Email Body (HTML File):</label><br>
+        <input type="file" name="bodyfile" id="bodyfile" accept=".html" required><br><br>
 
         <button type="submit">Send Emails</button>
     </form>
