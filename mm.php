@@ -86,8 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <h1>CSV Email Sender</h1>
     <form action="" method="post" enctype="multipart/form-data">
-        <p><strong>From:</strong> support.mis@checkCas.com (fixed)</p>
-        <p><strong>Subject:</strong> [[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟 (fixed)</p>
+        <p><strong>From:</strong> support.mis@checkCas.com</p>
+        <p><strong>Subject:</strong> [[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟</p>
 
         <label for="status">Send Emails to Status:</label><br>
         <select name="status" id="status">
