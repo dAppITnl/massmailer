@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
 
             // Generate log file name
-            $timestamp = date('dMMyy_HHi');
+            $timestamp = date('dMy_Hi');
             $logFileName = $statusFilter . "_" . $timestamp . "_sent.txt";
             $logFilePath = __DIR__ . "/" . $logFileName;
 
@@ -58,8 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         continue;
                     }
 
-                    // Only send emails for rows with the selected status (or all rows if no status is selected)
-                    if ($statusFilter === "" || trim($status) === $statusFilter) {
+                    // Only send emails for rows with the selected status
+                    if (trim($status) === $statusFilter) {
                         // Replace placeholders in subject and body
                         $personalizedSubject = str_replace('[[FirstName]]', $firstName, $subject);
                         $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
