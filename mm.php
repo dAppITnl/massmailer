@@ -72,8 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             $sentEmails[] = $email; // Track the sent email
                         }
 
-                        // Wait for 0.1 second before sending the next email
-                        sleep(0.1);
+                        usleep(100000); // Sleep for 100,000 microseconds = 0.1 seconds
                     }
                 }
                 fclose($handle);
@@ -81,10 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Save sent emails to a log file
                 if (!empty($sentEmails)) {
                     file_put_contents($logFilePath, implode(PHP_EOL, $sentEmails));
+                    echo "<p>Log file created: $logFilePath</p>";
                 }
 
                 echo "<p>Emails sent successfully: $emailCount</p>";
-                echo "<p>Log file created: $logFileName</p>";
             } else {
                 echo "<p>Failed to open the CSV file.</p>";
             }
