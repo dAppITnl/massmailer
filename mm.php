@@ -51,7 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 while (($row = fgetcsv($handle)) !== false) {
                     // Map CSV columns to variables
-                    [$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
+                    // Sponsor,Campaign,First Name,Last Name,E-mail,Phone,Address,City,State,Zip,Status,Rating,IP,Date
+                    [$sponsor,$campaign,$firstName,$lastName,$email,$phone,$address,$city,$state,$zip,$status,$rating,$ip,$date] = $row;
 
                     // Check if the email should be skipped
                     if (in_array($email, $ignoredEmails)) {
@@ -114,8 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <h1>CSV Email Sender</h1>
     <form action="" method="post" enctype="multipart/form-data">
-        <p><strong>From:</strong> support.mis@checkCas.com (fixed)</p>
-        <p><strong>Subject:</strong> [[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟 (fixed)</p>
+        <p><strong>From:</strong> support.mis@checkCas.com</p>
+        <p><strong>Subject:</strong> [[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟</p>
 
         <label for="status">Send Emails to Status:</label><br>
         <select name="status" id="status">
