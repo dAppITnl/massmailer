@@ -72,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             $sentEmails[] = $email; // Track the sent email
                         }
 
-                        // Wait for 1 second before sending the next email
-                        sleep(1);
+                        // Wait for 0.1 second before sending the next email
+                        sleep(0.1);
                     }
                 }
                 fclose($handle);
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <label for="status">Send Emails to Status:</label><br>
         <select name="status" id="status">
-            <option value="">All</option>
+            <option value="">None</option>
             <option value="Unpaid">Unpaid</option>
             <option value="Active">Active</option>
         </select><br><br>
