@@ -52,7 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 while (($row = fgetcsv($handle)) !== false) {
                     // Map CSV columns to variables
                     // Sponsor,Campaign,First Name,Last Name,E-mail,Phone,Address,City,State,Zip,Status,Rating,IP,Date
-                    [$sponsor,$campaign,$firstName,$lastName,$email,$phone,$address,$city,$state,$zip,$status,$rating,$ip,$date] = $row;
+                    //[$sponsor,$campaign,$firstName,$lastName,$email,$phone,$address,$city,$state,$zip,$status,$rating,$ip,$date] = $row;
+                    // Username,First Name,Last Name,E-mail,Phone,Program,Status,Date Joined
+                    [$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
 
                     // Check if the email should be skipped
                     if (in_array($email, $ignoredEmails)) {
