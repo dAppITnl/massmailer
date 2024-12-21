@@ -164,6 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 fetch(`?bodyfile=${encodeURIComponent(selectedFile)}`)
                     .then(response => response.json())
                     .then(data => {
+                        console.log('data:', data);
                         if (data.subject) {
                             document.getElementById('subject').value = data.subject;
                         }
