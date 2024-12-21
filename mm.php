@@ -120,9 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <form action="" method="post" enctype="multipart/form-data">
         <p>From: support.mis@checkCas.com</p>
         <label for="subject">Subject:</label><br>
-        <input type="text" id="subject" name="subject" 
-           value="<?= $subject; ?>" 
-           style="width: 80%; padding: 8px; margin-top: 5px;"><br><br>
+        <input type="text" id="subject" name="subject" value="<?= $subject; ?>" size="50"><br><br>
 
         <label for="status">Send Emails to Status:</label><br>
         <select name="status" id="status">
