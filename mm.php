@@ -9,102 +9,25 @@ function getBodyFiles($directory)
     return $files;
 }
 
-// Function to read ignored emails
-function getIgnoredEmails($file)
-{
-    if (file_exists($file)) {
-        return array_map('trim', file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
-    }
-    return [];
-}
-
-// Load body files and the default subject
+// Load body files
 $bodyFiles = getBodyFiles(__DIR__);
-$ignoreFile = __DIR__ . "/sent_ignore.txt";
-$ignoredEmails = getIgnoredEmails($ignoreFile);
-$subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟";
+$subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group!";
 
-// Handle file preview to dynamically update the subject
+// Dynamically update the subject based on the selected PHP file
 if (isset($_GET['bodyfile'])) {
     $bodyFile = __DIR__ . '/' . basename($_GET['bodyfile']);
     if (file_exists($bodyFile)) {
-        // Include the selected file to load the $subject variable
-        include $bodyFile;
+        include $bodyFile; // Load the file to set the $subject
         echo json_encode(['subject' => $subject]);
         exit;
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $from = "support.mis@checkCas.com";
-    $email_subject = $_POST['subject'];
-    $statusFilter = $_POST['status'];
+    // Handle the form submission
     $selectedBodyFile = $_POST['bodyfile'];
-    $csvFile = $_FILES['csvfile']['tmp_name'];
-    $emailCount = 0;
-    $sentEmails = [];
-
-    if (!empty($statusFilter) && !empty($email_subject)) {
-        if (is_uploaded_file($csvFile) && !empty($selectedBodyFile)) {
-            $bodyTemplate = file_get_contents(__DIR__ . "/" . $selectedBodyFile);
-            if ($bodyTemplate === false) {
-                echo "<p>Failed to read the body file.</p>";
-                exit;
-            }
-
-            // Generate log file name
-            $timestamp = date('dMy_Hi');
-            $logFileName = $statusFilter . "_" . $timestamp . "_sent.txt";
-            $logFilePath = __DIR__ . "/" . $logFileName;
-
-            $handle = fopen($csvFile, 'r');
-            if ($handle) {
-                // Skip the header line
-                fgetcsv($handle);
-
-                while (($row = fgetcsv($handle)) !== false) {
-                    [$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
-
-                    // Check if the email should be skipped
-                    if (in_array($email, $ignoredEmails)) {
-                        continue;
-                    }
-
-                    // Only send emails for rows with the selected status
-                    if (trim($status) === $statusFilter) {
-                        // Replace placeholders in subject and body
-                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject) . " 🌟";
-                        $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
-
-                        // Send the email
-                        $headers = "From: $from\r\n";
-                        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-                        if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
-                            $emailCount++;
-                            $sentEmails[] = $email; // Track the sent email
-                        }
-
-                        usleep(100000); // Sleep for 100,000 microseconds = 0.1 seconds
-                    }
-                }
-                fclose($handle);
-
-                // Save sent emails to a log file
-                if (!empty($sentEmails)) {
-                    file_put_contents($logFilePath, implode(PHP_EOL, $sentEmails));
-                    echo "<p>Log file created: $logFilePath</p>";
-                }
-
-                echo "<p>Emails sent successfully: $emailCount</p>";
-            } else {
-                echo "<p>Failed to open the CSV file.</p>";
-            }
-        } else {
-            echo "<p>Please upload the required CSV file and select a body file.</p>";
-        }
-    } else {
-        echo "<p>Please select a status or leave it empty to send to all rows.</p>";
-    }
+    $emailSubject = $_POST['subject'];
+    // Additional logic can be added here for email processing
 }
 ?>
 
@@ -126,19 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <h1>CSV Email Sender</h1>
     <form action="" method="post" enctype="multipart/form-data">
-        <p>From: support.mis@checkCas.com</p>
         <label for="subject">Subject:</label><br>
         <input type="text" id="subject" name="subject" value="<?= $subject; ?>" size="75"><br><br>
-
-        <label for="status">Send Emails to Status:</label><br>
-        <select name="status" id="status">
-            <option value="">None</option>
-            <option value="Unpaid">Unpaid</option>
-            <option value="Active">Active</option>
-        </select><br><br>
-
-        <label for="csvfile">Upload CSV File:</label><br>
-        <input type="file" name="csvfile" id="csvfile" accept=".csv" required><br><br>
 
         <label for="bodyfile">Select Email Body File:</label><br>
         <select name="bodyfile" id="bodyfile" required onchange="updateSubject()">
@@ -148,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <?php endforeach; ?>
         </select><br><br>
 
-        <button type="submit">Send Emails</button>
+        <button type="submit">Save and Continue</button>
     </form>
 
     <iframe id="bodyPreview" src=""></iframe>
@@ -160,13 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             const iframe = document.getElementById('bodyPreview');
 
             if (selectedFile) {
-                iframe.src = selectedFile;
+                iframe.src = selectedFile; // Update iframe preview
                 fetch(`?bodyfile=${encodeURIComponent(selectedFile)}`)
                     .then(response => response.json())
                     .then(data => {
-                        console.log('data:', data);
                         if (data.subject) {
-                            document.getElementById('subject').value = data.subject;
+                            document.getElementById('subject').value = data.subject; // Update subject field
                         }
                     })
                     .catch(error => console.error('Error fetching subject:', error));
