@@ -51,7 +51,7 @@ $subject = "[[FirstName]], as PHG-member: want (Multi) INCOME Fast..??";
 
       <p>I hope this message finds you well!</p>
 
-      <h1>You Want (Multi) INCOME Fast..??</h1>
+      <h2>You Want (Multi) INCOME Fast..??</h2>
 
       <p>Simple: become a paid member of 🚀 
           <a href="https://phghub.ai/ADC34DF" target="_blank">PHG Automatic Duplication System</a>, which builds your team and converts your 1-level paid members for your income.<br>
