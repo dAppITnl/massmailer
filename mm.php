@@ -21,7 +21,7 @@ function getIgnoredEmails($file)
 $bodyFiles = getBodyFiles(__DIR__);
 $ignoreFile = __DIR__ . "/sent_ignore.txt";
 $ignoredEmails = getIgnoredEmails($ignoreFile);
-$subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟";
+$subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group!";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $from = "support.mis@checkCas.com";
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     // Only send emails for rows with the selected status
                     if (trim($status) === $statusFilter) {
                         // Replace placeholders in subject and body
-                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $subject);
+                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $subject) . " 🌟";
                         $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
 
                         // Send the email
@@ -121,8 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <p>From: support.mis@checkCas.com</p>
         <label for="subject">Subject:</label><br>
         <input type="text" id="subject" name="subject" 
-           value="<?php echo $subject; ?>" 
-           style="width: 100%; padding: 8px; margin-top: 5px;"><br><br>
+           value="<?= $subject; ?>" 
+           style="width: 80%; padding: 8px; margin-top: 5px;"><br><br>
 
         <label for="status">Send Emails to Status:</label><br>
         <select name="status" id="status">
