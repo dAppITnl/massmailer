@@ -1,5 +1,5 @@
 <?php 
-$subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group!";
+$subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟";
 ?>
 <!DOCTYPE html>
 <html lang="en">

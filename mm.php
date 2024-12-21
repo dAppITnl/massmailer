@@ -11,7 +11,7 @@ function getBodyFiles($directory)
 
 // Load body files
 $bodyFiles = getBodyFiles(__DIR__);
-$subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group!";
+$subject = "";
 
 // Dynamically update the subject based on the selected PHP file
 if (isset($_GET['bodyfile'])) {
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     // Only send emails for rows with the selected status
                     if (trim($status) === $statusFilter) {
                         // Replace placeholders in subject and body
-                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject) . " 🌟";
+                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject);
                         $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
 
                         // Send the email
