@@ -25,14 +25,14 @@ $subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebo
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $from = "support.mis@checkCas.com";
-    $subject = $_POST['subject'];
+    $email_subject = $_POST['subject'];
     $statusFilter = $_POST['status'];
     $selectedBodyFile = $_POST['bodyfile'];
     $csvFile = $_FILES['csvfile']['tmp_name'];
     $emailCount = 0;
     $sentEmails = [];
 
-    if (!empty($statusFilter) && !empty($subject)) {
+    if (!empty($statusFilter) && !empty($email_subject)) {
         if (is_uploaded_file($csvFile) && !empty($selectedBodyFile)) {
             $bodyTemplate = file_get_contents(__DIR__ . "/" . $selectedBodyFile);
             if ($bodyTemplate === false) {
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     // Only send emails for rows with the selected status
                     if (trim($status) === $statusFilter) {
                         // Replace placeholders in subject and body
-                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $subject) . " 🌟";
+                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject) . " 🌟";
                         $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
 
                         // Send the email
