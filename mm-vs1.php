@@ -3,7 +3,7 @@
 function getBodyFiles($directory)
 {
     $files = [];
-    foreach (glob($directory . "/body_*.php") as $file) {
+    foreach (glob($directory . "/body_*.html") as $file) {
         $files[] = basename($file);
     }
     return $files;
@@ -18,22 +18,10 @@ function getIgnoredEmails($file)
     return [];
 }
 
-// Load body files and the default subject
 $bodyFiles = getBodyFiles(__DIR__);
 $ignoreFile = __DIR__ . "/sent_ignore.txt";
 $ignoredEmails = getIgnoredEmails($ignoreFile);
-$subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟";
-
-// Handle file preview to dynamically update the subject
-if (isset($_GET['bodyfile'])) {
-    $bodyFile = __DIR__ . '/' . basename($_GET['bodyfile']);
-    if (file_exists($bodyFile)) {
-        // Include the selected file to load the $subject variable
-        include $bodyFile;
-        echo json_encode(['subject' => $subject]);
-        exit;
-    }
-}
+$subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group!";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $from = "support.mis@checkCas.com";
@@ -63,6 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 fgetcsv($handle);
 
                 while (($row = fgetcsv($handle)) !== false) {
+                    // Map CSV columns to variables
+                    // Sponsor,Campaign,First Name,Last Name,E-mail,Phone,Address,City,State,Zip,Status,Rating,IP,Date
+                    //[$sponsor,$campaign,$firstName,$lastName,$email,$phone,$address,$city,$state,$zip,$status,$rating,$ip,$date] = $row;
+                    // Username,First Name,Last Name,E-mail,Phone,Program,Status,Date Joined
                     [$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
 
                     // Check if the email should be skipped
@@ -141,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <input type="file" name="csvfile" id="csvfile" accept=".csv" required><br><br>
 
         <label for="bodyfile">Select Email Body File:</label><br>
-        <select name="bodyfile" id="bodyfile" required onchange="updateSubject()">
+        <select name="bodyfile" id="bodyfile" required onchange="updateIframePreview()">
             <option value="">-- Select Body File --</option>
             <?php foreach ($bodyFiles as $file): ?>
                 <option value="<?= htmlspecialchars($file) ?>"><?= htmlspecialchars($file) ?></option>
@@ -154,21 +146,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <iframe id="bodyPreview" src=""></iframe>
 
     <script>
-        function updateSubject() {
+        function updateIframePreview() {
             const bodyFileSelect = document.getElementById('bodyfile');
             const selectedFile = bodyFileSelect.value;
             const iframe = document.getElementById('bodyPreview');
 
             if (selectedFile) {
                 iframe.src = selectedFile;
-                fetch(`?bodyfile=${encodeURIComponent(selectedFile)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.subject) {
-                            document.getElementById('subject').value = data.subject;
-                        }
-                    })
-                    .catch(error => console.error('Error fetching subject:', error));
             } else {
                 iframe.src = '';
             }
