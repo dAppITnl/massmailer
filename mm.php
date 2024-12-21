@@ -21,17 +21,18 @@ function getIgnoredEmails($file)
 $bodyFiles = getBodyFiles(__DIR__);
 $ignoreFile = __DIR__ . "/sent_ignore.txt";
 $ignoredEmails = getIgnoredEmails($ignoreFile);
+$subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $from = "support.mis@checkCas.com";
-    $subject = "[[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟";
+    $subject = $_POST['subject'];
     $statusFilter = $_POST['status'];
     $selectedBodyFile = $_POST['bodyfile'];
     $csvFile = $_FILES['csvfile']['tmp_name'];
     $emailCount = 0;
     $sentEmails = [];
 
-    if (!empty($statusFilter) || $statusFilter === "") {
+    if (!empty($statusFilter) && !empty($subject)) {
         if (is_uploaded_file($csvFile) && !empty($selectedBodyFile)) {
             $bodyTemplate = file_get_contents(__DIR__ . "/" . $selectedBodyFile);
             if ($bodyTemplate === false) {
@@ -117,8 +118,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <h1>CSV Email Sender</h1>
     <form action="" method="post" enctype="multipart/form-data">
-        <p><strong>From:</strong> support.mis@checkCas.com</p>
-        <p><strong>Subject:</strong> [[FirstName]], as PHG-member: join the 'Multi Income Streams' Facebook Group! 🌟</p>
+        <p>From: support.mis@checkCas.com</p>
+        <label for="subject">Subject:</label><br>
+        <input type="text" id="subject" name="subject" 
+           value="<?php echo $subject; ?>" 
+           style="width: 100%; padding: 8px; margin-top: 5px;"><br><br>
 
         <label for="status">Send Emails to Status:</label><br>
         <select name="status" id="status">
