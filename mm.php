@@ -1,17 +1,22 @@
 <?php
-// Function to get available body files
-function getBodyFiles($directory)
+// Function to get available files from a directory
+function getFiles($directory, $pattern)
 {
     $files = [];
-    foreach (glob($directory . "body_*.php") as $file) {
+    foreach (glob($directory . $pattern) as $file) {
         $files[] = basename($file);
     }
     return $files;
 }
 
-// Load body files
+// Define paths
 $bodyFilesPath = __DIR__ . '/bodyfiles/';
-$bodyFiles = getBodyFiles($bodyFilesPath);
+$emailListsPath = __DIR__ . '/email-lists/';
+
+// Load available body files and email list files
+$bodyFiles = getFiles($bodyFilesPath, "body_*.php");
+$emailLists = getFiles($emailListsPath, "*.csv");
+
 $subject = "";
 
 // Set default start date to one month ago
@@ -30,19 +35,44 @@ if (isset($_GET['bodyfile'])) {
     }
 }
 
+// Handle CSV file upload
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadCsvFile'])) {
+    if (isset($_FILES['csvfileUpload']) && $_FILES['csvfileUpload']['error'] == 0) {
+        $uploadPath = $emailListsPath . basename($_FILES['csvfileUpload']['name']);
+        if (move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath)) {
+            echo "<p>CSV file uploaded successfully.</p>";
+        } else {
+            echo "<p>Failed to upload CSV file.</p>";
+        }
+    }
+}
+
+// Handle body file upload
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadBodyFile'])) {
+    if (isset($_FILES['bodyfileUpload']) && $_FILES['bodyfileUpload']['error'] == 0) {
+        $uploadPath = $bodyFilesPath . basename($_FILES['bodyfileUpload']['name']);
+        if (move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath)) {
+            echo "<p>Body file uploaded successfully.</p>";
+        } else {
+            echo "<p>Failed to upload body file.</p>";
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
     $from = trim($_POST['from']) ?: "support.mis@checkCas.com";
     $email_subject = $_POST['subject'];
     $statusFilter = $_POST['status'];
     $selectedBodyFile = $_POST['bodyfile'];
+    $selectedCsvFile = $_POST['csvfile'];
     $startDate = $_POST['startDate'] . ' 00:00:00';
-    $csvFile = $_FILES['csvfile']['tmp_name'];
     $emailCount = 0;
     $sentEmails = [];
 
     if (!empty($statusFilter) && !empty($email_subject)) {
-        if (is_uploaded_file($csvFile) && !empty($selectedBodyFile)) {
-            $bodyTemplate = file_get_contents(__DIR__ . "/bodyfiles/" . $selectedBodyFile);
+        if (!empty($selectedCsvFile) && !empty($selectedBodyFile)) {
+            $csvFilePath = $emailListsPath . $selectedCsvFile;
+            $bodyTemplate = file_get_contents($bodyFilesPath . $selectedBodyFile);
             if ($bodyTemplate === false) {
                 echo "<p>Failed to read the body file.</p>";
                 exit;
@@ -52,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
             $logFileName = $statusFilter . "_" . $timestamp . "_sent.txt";
             $logFilePath = __DIR__ . "/" . $logFileName;
 
-            $handle = fopen($csvFile, 'r');
+            $handle = fopen($csvFilePath, 'r');
             if ($handle) {
                 fgetcsv($handle); // Skip header
 
@@ -93,22 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
                 echo "<p>Failed to open the CSV file.</p>";
             }
         } else {
-            echo "<p>Please upload a CSV file and select a body file.</p>";
+            echo "<p>Please select a CSV file and a body file.</p>";
         }
     } else {
         echo "<p>Please select a status or leave it empty to send to all rows.</p>";
-    }
-}
-
-// Handle body file upload
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadBodyFile'])) {
-    if (isset($_FILES['bodyfileUpload']) && $_FILES['bodyfileUpload']['error'] == 0) {
-        $uploadPath = $bodyFilesPath . basename($_FILES['bodyfileUpload']['name']);
-        if (move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath)) {
-            echo "<p>Body file uploaded successfully.</p>";
-        } else {
-            echo "<p>Failed to upload body file.</p>";
-        }
     }
 }
 ?>
@@ -119,23 +137,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadBodyFile'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSV Email Sender</title>
-    <style>
-        iframe { width: 100%; height: 500px; border: 1px solid #ccc; margin-top: 20px; }
-    </style>
 </head>
 <body>
     <h1>CSV Email Sender</h1>
     
-    <form action="" method="post" enctype="multipart/form-data">
-        <!-- From Input -->
+    <form action="" method="post">
         <label for="from">From:</label><br>
         <input type="email" id="from" name="from" value="support.mis@checkCas.com" size="50"><br><br>
 
-        <!-- Subject Input -->
         <label for="subject">Subject:</label><br>
         <input type="text" id="subject" name="subject" value="<?= $subject; ?>" size="75"><br><br>
 
-        <!-- Status Dropdown -->
         <label for="status">Send Emails to Status:</label><br>
         <select name="status" id="status">
             <option value="">None</option>
@@ -143,53 +155,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadBodyFile'])) {
             <option value="Active">Active</option>
         </select><br><br>
 
-        <!-- Start Date Input -->
         <label for="startDate">Ignore rows where Date is on or after:</label><br>
         <input type="date" id="startDate" name="startDate" value="<?= $defaultStartDate; ?>"><br><br>
 
-        <!-- CSV File Upload -->
-        <label for="csvfile">Upload CSV File:</label><br>
-        <input type="file" name="csvfile" id="csvfile" accept=".csv" required><br><br>
+        <label for="csvfile">Select CSV File:</label><br>
+        <select name="csvfile" id="csvfile" required>
+            <option value="">-- Select CSV File --</option>
+            <?php foreach ($emailLists as $file): ?>
+                <option value="<?= htmlspecialchars($file) ?>"><?= htmlspecialchars($file) ?></option>
+            <?php endforeach; ?>
+        </select><br><br>
 
-        <!-- Email Body File Dropdown -->
         <label for="bodyfile">Select Email Body File:</label><br>
-        <select name="bodyfile" id="bodyfile" required onchange="updateSubject()">
+        <select name="bodyfile" id="bodyfile" required>
             <option value="">-- Select Body File --</option>
             <?php foreach ($bodyFiles as $file): ?>
                 <option value="<?= htmlspecialchars($file) ?>"><?= htmlspecialchars($file) ?></option>
             <?php endforeach; ?>
         </select><br><br>
 
-        <!-- Submit Button -->
         <button type="submit" name="sendEmails">Send Emails</button>
+    </form>
+
+    <h2>Upload CSV File</h2>
+    <form action="" method="post" enctype="multipart/form-data">
+        <input type="file" name="csvfileUpload" accept=".csv">
+        <button type="submit" name="uploadCsvFile">Upload CSV</button>
     </form>
 
     <h2>Upload Email Body File</h2>
     <form action="" method="post" enctype="multipart/form-data">
-        <label for="bodyfileUpload">Upload PHP Email Body File:</label><br>
-        <input type="file" name="bodyfileUpload" id="bodyfileUpload" accept=".php"><br><br>
-        <button type="submit" name="uploadBodyFile">Upload</button>
+        <input type="file" name="bodyfileUpload" accept=".php">
+        <button type="submit" name="uploadBodyFile">Upload Body File</button>
     </form>
-
-    <!-- Iframe Preview -->
-    <iframe id="bodyPreview" src=""></iframe>
-
-    <script>
-        function updateSubject() {
-            const bodyFileSelect = document.getElementById('bodyfile');
-            const selectedFile = bodyFileSelect.value;
-            const iframe = document.getElementById('bodyPreview');
-
-            if (selectedFile) {
-                iframe.src = 'bodyfiles/' + selectedFile; 
-                fetch(`?bodyfile=${encodeURIComponent(selectedFile)}`)
-                    .then(response => response.text())
-                    .then(data => document.getElementById('subject').value = data)
-                    .catch(error => console.error('Error fetching subject:', error));
-            } else {
-                iframe.src = '';
-            }
-        }
-    </script>
 </body>
 </html>
