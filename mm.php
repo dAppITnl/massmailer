@@ -15,15 +15,31 @@ $emailListsPath = __DIR__ . '/email-lists/';
 
 // Handle file uploads
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['uploadCsvFile']) && isset($_FILES['csvfileUpload']) && $_FILES['csvfileUpload']['error'] == 0) {
-        move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $emailListsPath . basename($_FILES['csvfileUpload']['name']));
-        echo json_encode(['status' => 'success', 'message' => 'CSV file uploaded successfully.']);
+    if (isset($_POST['uploadCsvFile'])) {
+        if (isset($_FILES['csvfileUpload']) && $_FILES['csvfileUpload']['error'] == 0) {
+            $uploadPath = $emailListsPath . basename($_FILES['csvfileUpload']['name']);
+            if (move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath)) {
+                echo json_encode(['status' => 'success', 'message' => 'CSV file uploaded successfully (overwritten if existed).']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Failed to upload CSV file.']);
+            }
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'No CSV file selected or upload error occurred.']);
+        }
         exit;
     }
 
-    if (isset($_POST['uploadBodyFile']) && isset($_FILES['bodyfileUpload']) && $_FILES['bodyfileUpload']['error'] == 0) {
-        move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $bodyFilesPath . basename($_FILES['bodyfileUpload']['name']));
-        echo json_encode(['status' => 'success', 'message' => 'Body file uploaded successfully.']);
+    if (isset($_POST['uploadBodyFile'])) {
+        if (isset($_FILES['bodyfileUpload']) && $_FILES['bodyfileUpload']['error'] == 0) {
+            $uploadPath = $bodyFilesPath . basename($_FILES['bodyfileUpload']['name']);
+            if (move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath)) {
+                echo json_encode(['status' => 'success', 'message' => 'Body file uploaded successfully (overwritten if existed).']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Failed to upload body file.']);
+            }
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'No body file selected or upload error occurred.']);
+        }
         exit;
     }
 }
@@ -75,9 +91,16 @@ if (isset($_GET['getFiles'])) {
             .then(response => response.json())
             .then(result => {
                 messageElement.innerHTML = result.message;
-                refreshFileLists(); // Refresh the selects
+                messageElement.style.color = result.status === 'success' ? 'green' : 'red';
+                if (result.status === 'success') {
+                    refreshFileLists(); // Refresh the selects on success
+                }
             })
-            .catch(error => console.error('Error uploading file:', error));
+            .catch(error => {
+                messageElement.innerHTML = 'Error uploading file.';
+                messageElement.style.color = 'red';
+                console.error('Upload error:', error);
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
