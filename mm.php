@@ -1,5 +1,11 @@
 <?php
-// Function to get available files from a directory
+// Prevent accidental whitespace before output
+ob_start();
+header('Content-Type: application/json'); 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Function to get available files
 function getFiles($directory, $pattern)
 {
     $files = [];
@@ -13,52 +19,36 @@ function getFiles($directory, $pattern)
 $bodyFilesPath = __DIR__ . '/bodyfiles/';
 $emailListsPath = __DIR__ . '/email-lists/';
 
-// Handle file uploads
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['uploadCsvFile'])) {
-        if (!isset($_FILES['csvfileUpload'])) {
-            echo json_encode(['status' => 'error', 'message' => 'No file received.']);
-            exit;
-        }
-    
-        $fileError = $_FILES['csvfileUpload']['error'];
-        if ($fileError !== UPLOAD_ERR_OK) {
-            $errorMessages = [
-                UPLOAD_ERR_INI_SIZE   => "The uploaded file exceeds the upload_max_filesize directive in php.ini.",
-                UPLOAD_ERR_FORM_SIZE  => "The uploaded file exceeds the MAX_FILE_SIZE directive in the HTML form.",
-                UPLOAD_ERR_PARTIAL    => "The uploaded file was only partially uploaded.",
-                UPLOAD_ERR_NO_FILE    => "No file was uploaded.",
-                UPLOAD_ERR_NO_TMP_DIR => "Missing a temporary folder.",
-                UPLOAD_ERR_CANT_WRITE => "Failed to write file to disk.",
-                UPLOAD_ERR_EXTENSION  => "A PHP extension stopped the file upload."
-            ];
-            $errorMessage = $errorMessages[$fileError] ?? "Unknown upload error.";
-            echo json_encode(['status' => 'error', 'message' => $errorMessage]);
-            exit;
-        }
-    
-        $uploadPath = $emailListsPath . basename($_FILES['csvfileUpload']['name']);
-        if (move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath)) {
-            echo json_encode(['status' => 'success', 'message' => 'CSV file uploaded successfully (overwritten if existed).']);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to move uploaded file. Check folder permissions.']);
-        }
+// Handle CSV file upload
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadCsvFile'])) {
+    if (!isset($_FILES['csvfileUpload'])) {
+        echo json_encode(['status' => 'error', 'message' => 'No file received.']);
         exit;
     }
-    
-    if (isset($_POST['uploadBodyFile'])) {
-        if (isset($_FILES['bodyfileUpload']) && $_FILES['bodyfileUpload']['error'] == 0) {
-            $uploadPath = $bodyFilesPath . basename($_FILES['bodyfileUpload']['name']);
-            if (move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath)) {
-                echo json_encode(['status' => 'success', 'message' => 'Body file uploaded successfully (overwritten if existed).']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Failed to upload body file.']);
-            }
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'No body file selected or upload error occurred.']);
-        }
+
+    $uploadPath = $emailListsPath . basename($_FILES['csvfileUpload']['name']);
+    if (move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath)) {
+        echo json_encode(['status' => 'success', 'message' => 'CSV file uploaded successfully (overwritten if existed).']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Failed to move uploaded file. Check folder permissions.']);
+    }
+    exit;
+}
+
+// Handle body file upload
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadBodyFile'])) {
+    if (!isset($_FILES['bodyfileUpload'])) {
+        echo json_encode(['status' => 'error', 'message' => 'No file received.']);
         exit;
     }
+
+    $uploadPath = $bodyFilesPath . basename($_FILES['bodyfileUpload']['name']);
+    if (move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath)) {
+        echo json_encode(['status' => 'success', 'message' => 'Body file uploaded successfully (overwritten if existed).']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Failed to upload body file.']);
+    }
+    exit;
 }
 
 // API endpoint to get file lists
@@ -101,7 +91,7 @@ if (isset($_GET['getFiles'])) {
         }
 
         function uploadFile(formData, messageElement) {
-            messageElement.innerHTML = "Processing..."; // Show processing message
+            messageElement.innerHTML = "Processing..."; 
             messageElement.style.color = "blue";
 
             fetch('', {
@@ -126,24 +116,21 @@ if (isset($_GET['getFiles'])) {
         document.addEventListener('DOMContentLoaded', () => {
             refreshFileLists();
 
-            function handleFormSubmit(event, messageElement) {
+            document.getElementById('uploadCsvButton').addEventListener('click', function() {
+                let formData = new FormData(document.getElementById('uploadCsvForm'));
+                uploadFile(formData, document.getElementById('csvMessage'));
+            });
+
+            document.getElementById('uploadBodyButton').addEventListener('click', function() {
+                let formData = new FormData(document.getElementById('uploadBodyForm'));
+                uploadFile(formData, document.getElementById('bodyMessage'));
+            });
+
+            document.getElementById('emailForm').addEventListener('submit', function(event) {
                 event.preventDefault();
-                messageElement.innerHTML = ""; // Clear previous message
-                let formData = new FormData(event.target);
-                uploadFile(formData, messageElement);
-            }
-
-            document.getElementById('uploadCsvForm').addEventListener('submit', function(event) {
-                handleFormSubmit(event, document.getElementById('csvMessage'));
-            });
-
-            document.getElementById('uploadBodyForm').addEventListener('submit', function(event) {
-                handleFormSubmit(event, document.getElementById('bodyMessage'));
-            });
-
-            document.getElementById('emailForm').addEventListener('submit', function() {
                 document.getElementById('emailMessage').innerHTML = "Processing...";
                 document.getElementById('emailMessage').style.color = "blue";
+                this.submit(); // Submit the form after showing the message
             });
         });
     </script>
@@ -175,21 +162,21 @@ if (isset($_GET['getFiles'])) {
         <select name="bodyfile" id="bodyfile" required></select><br><br>
 
         <button type="submit" name="sendEmails">Send Emails</button>
-        <p id="emailMessage"></p> <!-- Status message for email form -->
+        <p id="emailMessage"></p> 
     </form>
 
     <h2>Upload CSV File</h2>
     <form id="uploadCsvForm" enctype="multipart/form-data">
         <input type="file" name="csvfileUpload" accept=".csv" required>
-        <button type="submit" name="uploadCsvFile">Upload CSV</button>
-        <p id="csvMessage"></p> <!-- Status message for CSV upload -->
+        <button type="button" id="uploadCsvButton">Upload CSV</button>
+        <p id="csvMessage"></p> 
     </form>
 
     <h2>Upload Email Body File</h2>
     <form id="uploadBodyForm" enctype="multipart/form-data">
         <input type="file" name="bodyfileUpload" accept=".php" required>
-        <button type="submit" name="uploadBodyFile">Upload Body File</button>
-        <p id="bodyMessage"></p> <!-- Status message for body file upload -->
+        <button type="button" id="uploadBodyButton">Upload Body File</button>
+        <p id="bodyMessage"></p> 
     </form>
 </body>
 </html>
