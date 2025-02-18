@@ -87,27 +87,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
                 fgetcsv($handle); // Skip header
 
                 while (($row = fgetcsv($handle)) !== false) {
-                    [$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
-
+                    // Updated column mapping
+                    [
+                        $sponsor, $campaign, $firstName, $lastName, $email, $phone, $address, 
+                        $city, $state, $zip, $status, $rating, $ip, $date
+                    ] = $row;
+                
                     // Convert date format to compare
-                    $dateJoined = date('Y-m-d H:i:s', strtotime($dateJoined));
-
-                    // Skip emails if dateJoined is newer than startDate
-                    if ($dateJoined >= $startDate) {
+                    $date = date('Y-m-d H:i:s', strtotime($date));
+                
+                    // Skip emails if Date is newer than startDate
+                    if ($date >= $startDate) {
                         continue;
                     }
-
+                
                     if (trim($status) === $statusFilter) {
                         $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject);
                         $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
-
+                
                         $headers = "From: $from\r\n";
                         $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
                         if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
                             $emailCount++;
                             $sentEmails[] = $email;
                         }
-
+                
                         usleep(100000); // Sleep for 0.1s
                     }
                 }
