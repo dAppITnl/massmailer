@@ -1,3 +1,4 @@
 # gitignore
 sent_ignore.txt
 *_sent.txt
+log/*
