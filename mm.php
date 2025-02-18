@@ -93,7 +93,8 @@ if (isset($_GET['getFiles'])) {
         function uploadFile(formData, messageElement) {
             messageElement.innerHTML = "Processing..."; 
             messageElement.style.color = "blue";
-
+            console.log('uploadFile: ', formData);
+exit;
             fetch('', {
                 method: 'POST',
                 body: formData
@@ -109,7 +110,7 @@ if (isset($_GET['getFiles'])) {
             .catch(error => {
                 messageElement.innerHTML = 'Error uploading file.';
                 messageElement.style.color = 'red';
-                console.error('Upload error:', error);
+                console.error('uploadFile Upload error:', error);
             });
         }
 
