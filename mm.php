@@ -20,34 +20,30 @@ $bodyFilesPath = __DIR__ . '/bodyfiles/';
 $emailListsPath = __DIR__ . '/email-lists/';
 
 // Handle CSV file upload
-if ($_SERVER['REQUEST_METHOD'] == 'POST' /*&& isset($_POST['csvfileIUpload'])*/) {
-    if (!isset($_FILES['csvfileUpload'])) {
-        echo json_encode(['status' => 'error', 'message' => 'No file received.']);
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_FILES['csvfileUpload'])) {
+        $filename = basename($_FILES['csvfileUpload']['name']);
+        $uploadPath = $emailListsPath . $filename;
+        if (move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath)) {
+            echo json_encode(['status' => 'success', 'message' => "CSV file '".$filename."' uploaded successfully (overwritten if existed)."]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => "Failed to move uploaded file: '".$filename."'. Check folder permissions."]);
+        }
         exit;
     }
-
-    $uploadPath = $emailListsPath . basename($_FILES['csvfileUpload']['name']);
-    if (move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath)) {
-        echo json_encode(['status' => 'success', 'message' => 'CSV file uploaded successfully (overwritten if existed).']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to move uploaded file. Check folder permissions.']);
-    }
-    exit;
-//}
-
-// Handle body file upload
-//if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadBodyFile'])) {
-    if (!isset($_FILES['bodyfileUpload'])) {
-        echo json_encode(['status' => 'error', 'message' => 'No file received.']);
+    
+    // Handle body file upload
+    if (isset($_FILES['bodyfileUpload'])) {
+        $filename = basename($_FILES['bodyfileUpload']['name']);
+        $uploadPath = $bodyFilesPath . $filename;
+        if (move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath)) {
+            echo json_encode(['status' => 'success', 'message' => "Body file '".$filename."' uploaded successfully (overwritten if existed)."]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => "Failed to upload body file: '".$filename."'. Check folder permissions."]);
+        }
         exit;
     }
-
-    $uploadPath = $bodyFilesPath . basename($_FILES['bodyfileUpload']['name']);
-    if (move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath)) {
-        echo json_encode(['status' => 'success', 'message' => 'Body file uploaded successfully (overwritten if existed).']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to upload body file.']);
-    }
+    echo json_encode(['status' => 'error', 'message' => 'No file received.']);
     exit;
 }
 
