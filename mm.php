@@ -20,7 +20,7 @@ $bodyFilesPath = __DIR__ . '/bodyfiles/';
 $emailListsPath = __DIR__ . '/email-lists/';
 
 // Handle CSV file upload
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['csvfileIUpload'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' /*&& isset($_POST['csvfileIUpload'])*/) {
     if (!isset($_FILES['csvfileUpload'])) {
         echo json_encode(['status' => 'error', 'message' => 'No file received.']);
         exit;
@@ -33,10 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['csvfileIUpload'])) {
         echo json_encode(['status' => 'error', 'message' => 'Failed to move uploaded file. Check folder permissions.']);
     }
     exit;
-}
+//}
 
 // Handle body file upload
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadBodyFile'])) {
+//if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadBodyFile'])) {
     if (!isset($_FILES['bodyfileUpload'])) {
         echo json_encode(['status' => 'error', 'message' => 'No file received.']);
         exit;
