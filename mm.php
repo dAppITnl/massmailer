@@ -84,6 +84,9 @@ if (isset($_GET['getFiles'])) {
         }
 
         function uploadFile(formData, messageElement) {
+            messageElement.innerHTML = "Processing..."; // Show processing message
+            messageElement.style.color = "blue";
+
             fetch('', {
                 method: 'POST',
                 body: formData
@@ -93,7 +96,7 @@ if (isset($_GET['getFiles'])) {
                 messageElement.innerHTML = result.message;
                 messageElement.style.color = result.status === 'success' ? 'green' : 'red';
                 if (result.status === 'success') {
-                    refreshFileLists(); // Refresh the selects on success
+                    refreshFileLists(); // Refresh file dropdowns after successful upload
                 }
             })
             .catch(error => {
@@ -106,16 +109,24 @@ if (isset($_GET['getFiles'])) {
         document.addEventListener('DOMContentLoaded', () => {
             refreshFileLists();
 
-            document.getElementById('uploadCsvForm').addEventListener('submit', function(event) {
+            function handleFormSubmit(event, messageElement) {
                 event.preventDefault();
-                let formData = new FormData(this);
-                uploadFile(formData, document.getElementById('csvMessage'));
+                messageElement.innerHTML = ""; // Clear previous message
+                let formData = new FormData(event.target);
+                uploadFile(formData, messageElement);
+            }
+
+            document.getElementById('uploadCsvForm').addEventListener('submit', function(event) {
+                handleFormSubmit(event, document.getElementById('csvMessage'));
             });
 
             document.getElementById('uploadBodyForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                let formData = new FormData(this);
-                uploadFile(formData, document.getElementById('bodyMessage'));
+                handleFormSubmit(event, document.getElementById('bodyMessage'));
+            });
+
+            document.getElementById('emailForm').addEventListener('submit', function() {
+                document.getElementById('emailMessage').innerHTML = "Processing...";
+                document.getElementById('emailMessage').style.color = "blue";
             });
         });
     </script>
@@ -123,7 +134,7 @@ if (isset($_GET['getFiles'])) {
 <body>
     <h1>CSV Email Sender</h1>
 
-    <form action="" method="post">
+    <form id="emailForm" action="" method="post">
         <label for="from">From:</label><br>
         <input type="email" id="from" name="from" value="support.mis@checkCas.com" size="50"><br><br>
 
@@ -147,20 +158,21 @@ if (isset($_GET['getFiles'])) {
         <select name="bodyfile" id="bodyfile" required></select><br><br>
 
         <button type="submit" name="sendEmails">Send Emails</button>
+        <p id="emailMessage"></p> <!-- Status message for email form -->
     </form>
 
     <h2>Upload CSV File</h2>
     <form id="uploadCsvForm" enctype="multipart/form-data">
         <input type="file" name="csvfileUpload" accept=".csv" required>
         <button type="submit" name="uploadCsvFile">Upload CSV</button>
-        <p id="csvMessage"></p>
+        <p id="csvMessage"></p> <!-- Status message for CSV upload -->
     </form>
 
     <h2>Upload Email Body File</h2>
     <form id="uploadBodyForm" enctype="multipart/form-data">
         <input type="file" name="bodyfileUpload" accept=".php" required>
         <button type="submit" name="uploadBodyFile">Upload Body File</button>
-        <p id="bodyMessage"></p>
+        <p id="bodyMessage"></p> <!-- Status message for body file upload -->
     </form>
 </body>
 </html>
