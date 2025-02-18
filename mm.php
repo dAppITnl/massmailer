@@ -20,7 +20,7 @@ $bodyFilesPath = __DIR__ . '/bodyfiles/';
 $emailListsPath = __DIR__ . '/email-lists/';
 
 // Handle CSV file upload
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['uploadCsvFile'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['csvfileIUpload'])) {
     if (!isset($_FILES['csvfileUpload'])) {
         echo json_encode(['status' => 'error', 'message' => 'No file received.']);
         exit;
@@ -94,7 +94,7 @@ if (isset($_GET['getFiles'])) {
             messageElement.innerHTML = "Processing..."; 
             messageElement.style.color = "blue";
             console.log('uploadFile: ', formData);
-exit;
+
             fetch('', {
                 method: 'POST',
                 body: formData
