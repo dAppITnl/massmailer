@@ -1,9 +1,9 @@
 <?php
 // Prevent accidental whitespace before output
-ob_start();
-header('Content-Type: application/json'); 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+//ob_start();
+//header('Content-Type: application/json'); 
+//error_reporting(E_ALL);
+//ini_set('display_errors', 1);
 
 // Function to get available files
 function getFiles($directory, $pattern)
