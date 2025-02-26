@@ -49,31 +49,6 @@ if (isset($_GET['getFiles'])) {
     ]);
     exit;
 }
-
-// API to fetch and process the selected body file
-if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
-    $file = basename($_GET['file']);
-    $filePath = $bodyFilesPath . $file;
-
-    if (file_exists($filePath)) {
-        // Capture the output of the included PHP file
-        ob_start();
-        include $filePath;
-        $content = ob_get_clean();
-
-        // Capture the $subject variable if defined in the body file
-        $subject = isset($subject) ? $subject : '';
-
-        echo json_encode([
-            'status' => 'success',
-            'subject' => $subject,
-            'content' => $content
-        ]);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'File not found.']);
-    }
-    exit;
-}
 ?>
 
 <!DOCTYPE html>
@@ -136,23 +111,9 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
             document.getElementById('bodyfile').addEventListener('change', function() {
                 let selectedFile = this.value;
                 if (selectedFile) {
-                    fetch(`?getBodyFile=true&file=${encodeURIComponent(selectedFile)}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.status === 'success') {
-                                document.getElementById('subject').value = data.subject;
-                                document.getElementById('bodyPreview').innerHTML = data.content;
-                            } else {
-                                document.getElementById('bodyPreview').innerHTML = 'Error loading file.';
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching body file:', error);
-                            document.getElementById('bodyPreview').innerHTML = 'Error fetching file.';
-                        });
+                    document.getElementById('bodyIframe').src = 'bodyfiles/' + encodeURIComponent(selectedFile);
                 } else {
-                    document.getElementById('bodyPreview').innerHTML = '';
-                    document.getElementById('subject').value = '';
+                    document.getElementById('bodyIframe').src = ''; // Clear iframe when no file is selected
                 }
             });
         });
@@ -167,6 +128,13 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
 
         <label for="subject">Subject:</label><br>
         <input type="text" id="subject" name="subject" size="75"><br><br>
+
+        <label for="status">Send Emails to Status:</label><br>
+        <select name="status" id="status">
+            <option value="">None</option>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Active">Active</option>
+        </select><br><br>
 
         <label for="csvfile">Select CSV File:</label><br>
         <select name="csvfile" id="csvfile" required></select><br><br>
@@ -187,12 +155,12 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
 
     <h2>Upload Email Body File</h2>
     <form id="uploadBodyForm" enctype="multipart/form-data">
-        <input type="file" name="bodyfileUpload" accept=".php" required>
+        <input type="file" name="bodyfileUpload" accept=".php,.html" required>
         <button type="button" id="uploadBodyButton">Upload Body File</button>
         <p id="bodyMessage"></p>
     </form>
 
     <h2>Email Body Preview</h2>
-    <div id="bodyPreview" style="width:90%; min-height:300px; padding:10px; border:1px solid #ccc; background:#f9f9f9;"></div>
+    <iframe id="bodyIframe" style="width:90%; height:500px; border:1px solid #ccc;"></iframe>
 </body>
 </html>
