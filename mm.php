@@ -129,8 +129,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
                 .then(response => response.json())
                 .then(data => {
                     const csvSelect = document.getElementById('csvfile');
-                    csvSelect.innerHTML = '<option value="">-- Select CSV File --</option>';
-                    data.csvFiles.forEach(file => csvSelect.add(new Option(file, file)));
+                    if (csvSelect.tagName === 'SELECT') {
+                        csvSelect.innerHTML = '<option value="">-- Select CSV File --</option>';
+                        data.csvFiles.forEach(file => csvSelect.add(new Option(file, file)));
+                    }
 
                     const bodySelect = document.getElementById('bodyfile');
                     bodySelect.innerHTML = '<option value="">-- Select Body File --</option>';
