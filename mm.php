@@ -27,7 +27,11 @@ $ignoreFile = __DIR__ . "/sent_ignore.txt";
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['csvfileUpload'])) {
     $filename = basename($_FILES['csvfileUpload']['name']);
     $uploadPath = $emailListsPath . $filename;
-    move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath);
+    if (move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath)) {
+        echo json_encode(['status' => 'success', 'message' => "CSV file uploaded successfully."]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => "Failed to upload CSV file."]);
+    }
     exit;
 }
 
@@ -35,7 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['csvfileUpload'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['bodyfileUpload'])) {
     $filename = basename($_FILES['bodyfileUpload']['name']);
     $uploadPath = $bodyFilesPath . $filename;
-    move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath);
+    if (move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath)) {
+        echo json_encode(['status' => 'success', 'message' => "Body file uploaded successfully."]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => "Failed to upload body file."]);
+    }
     exit;
 }
 
@@ -147,35 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSV Email Sender</title>
-    <script>
-        function refreshFileLists() {
-            fetch('?getFiles=true')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('csvfile').innerHTML = '<option value="">-- Select CSV File --</option>';
-                    data.csvFiles.forEach(file => csvfile.add(new Option(file, file)));
-
-                    document.getElementById('bodyfile').innerHTML = '<option value="">-- Select Body File --</option>';
-                    data.bodyFiles.forEach(file => bodyfile.add(new Option(file, file)));
-                });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            refreshFileLists();
-
-            document.getElementById('bodyfile').addEventListener('change', function() {
-                let selectedFile = this.value;
-                if (selectedFile) {
-                    fetch(`?getBodyFile=true&file=${encodeURIComponent(selectedFile)}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById('subject').value = data.subject || '';
-                            document.getElementById('bodyPreview').innerHTML = data.content || 'No content available';
-                        });
-                }
-            });
-        });
-    </script>
 </head>
 <body>
     <h1>CSV Email Sender</h1>
@@ -201,6 +180,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
         <select name="bodyfile" id="bodyfile" required></select><br><br>
 
         <button type="submit" name="sendEmails">Send Emails</button>
+    </form>
+
+    <h2>Upload CSV File</h2>
+    <form action="" method="post" enctype="multipart/form-data">
+        <input type="file" name="csvfileUpload" required>
+        <button type="submit">Upload CSV</button>
+    </form>
+
+    <h2>Upload Email Body File</h2>
+    <form action="" method="post" enctype="multipart/form-data">
+        <input type="file" name="bodyfileUpload" required>
+        <button type="submit">Upload Body</button>
     </form>
 
     <h2>Email Body Preview</h2>
