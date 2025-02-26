@@ -27,11 +27,7 @@ $ignoreFile = __DIR__ . "/sent_ignore.txt";
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['csvfileUpload'])) {
     $filename = basename($_FILES['csvfileUpload']['name']);
     $uploadPath = $emailListsPath . $filename;
-    if (move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath)) {
-        echo json_encode(['status' => 'success', 'message' => "CSV file uploaded successfully."]);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => "Failed to upload CSV file."]);
-    }
+    move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath);
     exit;
 }
 
@@ -39,11 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['csvfileUpload'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['bodyfileUpload'])) {
     $filename = basename($_FILES['bodyfileUpload']['name']);
     $uploadPath = $bodyFilesPath . $filename;
-    if (move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath)) {
-        echo json_encode(['status' => 'success', 'message' => "Body file uploaded successfully."]);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => "Failed to upload body file."]);
-    }
+    move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath);
     exit;
 }
 
@@ -85,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
     $statusFilter = $_POST['status'];
     $selectedBodyFile = $_POST['bodyfile'];
     $csvFile = $emailListsPath . $_POST['csvfile'];
+    $startDate = $_POST['startDate']; // Get the start date from the form
     $emailCount = 0;
     $sentEmails = [];
 
@@ -103,24 +96,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
 
             $handle = fopen($csvFile, 'r');
             if ($handle) {
-                fgetcsv($handle); // Skip header line
+                fgetcsv($handle); // Skip the header line
 
                 while (($row = fgetcsv($handle)) !== false) {
-                    [$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
+                    [$sponsor, $campaign, $firstName, $lastName, $email, $phone, $address, $city, $state, $zip, $status, $rating, $ip, $dateJoined] = $row;
 
+                    // Convert CSV date to comparable format
+                    $dateJoinedFormatted = date('Y-m-d', strtotime($dateJoined));
+
+                    // Filter by ignored emails and date
                     if (in_array($email, $ignoredEmails)) continue;
-                    if (trim($status) === $statusFilter) {
-                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject) . " 🌟";
-                        $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
+                    if (trim($status) !== $statusFilter) continue;
+                    if ($dateJoinedFormatted >= $startDate) continue; // Skip if dateJoined is on or after startDate
 
-                        $headers = "From: $from\r\n";
-                        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-                        if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
-                            $emailCount++;
-                            $sentEmails[] = $email;
-                        }
-                        usleep(100000);
+                    // Personalize email
+                    $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject) . " 🌟";
+                    $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
+
+                    // Send email
+                    $headers = "From: $from\r\n";
+                    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+                    if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
+                        $emailCount++;
+                        $sentEmails[] = $email;
                     }
+                    usleep(100000);
                 }
                 fclose($handle);
 
@@ -191,6 +191,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
             <option value="Active">Active</option>
         </select><br><br>
 
+        <label for="startDate">Ignore rows where Date is on or after:</label><br>
+        <input type="date" id="startDate" name="startDate" value="<?= date('Y-m-d', strtotime('-1 month')); ?>"><br><br>
+
         <label>Select CSV File:</label><br>
         <select name="csvfile" id="csvfile" required></select><br><br>
 
@@ -198,18 +201,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
         <select name="bodyfile" id="bodyfile" required></select><br><br>
 
         <button type="submit" name="sendEmails">Send Emails</button>
-    </form>
-
-    <h2>Upload CSV File</h2>
-    <form id="uploadCsvForm" enctype="multipart/form-data">
-        <input type="file" name="csvfileUpload" required>
-        <button type="button" onclick="refreshFileLists()">Upload CSV</button>
-    </form>
-
-    <h2>Upload Email Body File</h2>
-    <form id="uploadBodyForm" enctype="multipart/form-data">
-        <input type="file" name="bodyfileUpload" required>
-        <button type="button" onclick="refreshFileLists()">Upload Body</button>
     </form>
 
     <h2>Email Body Preview</h2>
