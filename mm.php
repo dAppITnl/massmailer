@@ -182,7 +182,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
 
     <form id="emailForm" action="" method="post">
         <label>Subject:</label><br>
-        <input type="text" id="subject" name="subject" required><br><br>
+        <input type="text" id="subject" name="subject" size="75" required><br><br>
+
+        <label for="status">Send Emails to Status:</label><br>
+        <select name="status" id="status">
+            <option value="">None</option>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Active">Active</option>
+        </select><br><br>
 
         <label>Select CSV File:</label><br>
         <select name="csvfile" id="csvfile" required></select><br><br>
