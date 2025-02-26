@@ -9,37 +9,19 @@ function getFiles($directory, $pattern)
     return $files;
 }
 
+// Function to read ignored emails
+function getIgnoredEmails($file)
+{
+    if (file_exists($file)) {
+        return array_map('trim', file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+    }
+    return [];
+}
+
 // Define paths
 $bodyFilesPath = __DIR__ . '/bodyfiles/';
 $emailListsPath = __DIR__ . '/email-lists/';
-
-// Handle file uploads
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_FILES['csvfileUpload'])) {
-        $filename = basename($_FILES['csvfileUpload']['name']);
-        $uploadPath = $emailListsPath . $filename;
-        if (move_uploaded_file($_FILES['csvfileUpload']['tmp_name'], $uploadPath)) {
-            echo json_encode(['status' => 'success', 'message' => "CSV file uploaded successfully."]);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => "Failed to upload CSV file."]);
-        }
-        exit;
-    }
-
-    if (isset($_FILES['bodyfileUpload'])) {
-        $filename = basename($_FILES['bodyfileUpload']['name']);
-        $uploadPath = $bodyFilesPath . $filename;
-        if (move_uploaded_file($_FILES['bodyfileUpload']['tmp_name'], $uploadPath)) {
-            echo json_encode(['status' => 'success', 'message' => "Body file uploaded successfully."]);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => "Failed to upload body file."]);
-        }
-        exit;
-    }
-
-    echo json_encode(['status' => 'error', 'message' => 'No file received.']);
-    exit;
-}
+$ignoreFile = __DIR__ . "/sent_ignore.txt";
 
 // API to get file lists
 if (isset($_GET['getFiles'])) {
@@ -56,12 +38,9 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
     $filePath = $bodyFilesPath . $file;
 
     if (file_exists($filePath)) {
-        // Capture the output of the included PHP file
         ob_start();
         include $filePath;
         $content = ob_get_clean();
-
-        // Capture the $subject variable if defined in the body file
         $subject = isset($subject) ? $subject : '';
 
         echo json_encode([
@@ -73,6 +52,68 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
         echo json_encode(['status' => 'error', 'message' => 'File not found.']);
     }
     exit;
+}
+
+// Handle email sending
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
+    $from = "support.mis@checkCas.com";
+    $email_subject = $_POST['subject'];
+    $statusFilter = $_POST['status'];
+    $selectedBodyFile = $_POST['bodyfile'];
+    $csvFile = $_FILES['csvfile']['tmp_name'];
+    $emailCount = 0;
+    $sentEmails = [];
+
+    if (!empty($statusFilter) && !empty($email_subject)) {
+        if (is_uploaded_file($csvFile) && !empty($selectedBodyFile)) {
+            $bodyTemplate = file_get_contents($bodyFilesPath . $selectedBodyFile);
+            if ($bodyTemplate === false) {
+                echo "<p>Failed to read the body file.</p>";
+                exit;
+            }
+
+            $ignoredEmails = getIgnoredEmails($ignoreFile);
+            $timestamp = date('dMy_Hi');
+            $logFileName = $statusFilter . "_" . $timestamp . "_sent.txt";
+            $logFilePath = __DIR__ . "/" . $logFileName;
+
+            $handle = fopen($csvFile, 'r');
+            if ($handle) {
+                fgetcsv($handle); // Skip the header line
+
+                while (($row = fgetcsv($handle)) !== false) {
+                    [$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
+
+                    if (in_array($email, $ignoredEmails)) continue;
+                    if (trim($status) === $statusFilter) {
+                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject) . " 🌟";
+                        $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
+
+                        $headers = "From: $from\r\n";
+                        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+                        if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
+                            $emailCount++;
+                            $sentEmails[] = $email;
+                        }
+                        usleep(100000);
+                    }
+                }
+                fclose($handle);
+
+                if (!empty($sentEmails)) {
+                    file_put_contents($logFilePath, implode(PHP_EOL, $sentEmails));
+                    echo "<p>Log file created: $logFilePath</p>";
+                }
+                echo "<p>Emails sent successfully: $emailCount</p>";
+            } else {
+                echo "<p>Failed to open the CSV file.</p>";
+            }
+        } else {
+            echo "<p>Please upload the required CSV file and select a body file.</p>";
+        }
+    } else {
+        echo "<p>Please select a status or leave it empty to send to all rows.</p>";
+    }
 }
 ?>
 
@@ -97,41 +138,8 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
                 });
         }
 
-        function uploadFile(formData, messageElement) {
-            messageElement.innerHTML = "Processing...";
-            messageElement.style.color = "blue";
-
-            fetch('', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
-                messageElement.innerHTML = result.message;
-                messageElement.style.color = result.status === 'success' ? 'green' : 'red';
-                if (result.status === 'success') {
-                    refreshFileLists();
-                }
-            })
-            .catch(error => {
-                messageElement.innerHTML = 'Error uploading file.';
-                messageElement.style.color = 'red';
-                console.error('Upload error:', error);
-            });
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             refreshFileLists();
-
-            document.getElementById('uploadCsvButton').addEventListener('click', function() {
-                let formData = new FormData(document.getElementById('uploadCsvForm'));
-                uploadFile(formData, document.getElementById('csvMessage'));
-            });
-
-            document.getElementById('uploadBodyButton').addEventListener('click', function() {
-                let formData = new FormData(document.getElementById('uploadBodyForm'));
-                uploadFile(formData, document.getElementById('bodyMessage'));
-            });
 
             document.getElementById('bodyfile').addEventListener('change', function() {
                 let selectedFile = this.value;
@@ -161,35 +169,28 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
 <body>
     <h1>CSV Email Sender</h1>
 
-    <form id="emailForm" action="" method="post">
+    <form id="emailForm" action="" method="post" enctype="multipart/form-data">
         <label for="from">From:</label><br>
-        <input type="email" id="from" name="from" value="support.mis@checkCas.com" size="50"><br><br>
+        <input type="email" id="from" name="from" value="support.mis@checkCas.com" size="50" readonly><br><br>
 
         <label for="subject">Subject:</label><br>
-        <input type="text" id="subject" name="subject" size="75"><br><br>
+        <input type="text" id="subject" name="subject" size="75" required><br><br>
 
         <label for="csvfile">Select CSV File:</label><br>
-        <select name="csvfile" id="csvfile" required></select><br><br>
+        <input type="file" name="csvfile" id="csvfile" required><br><br>
 
         <label for="bodyfile">Select Email Body File:</label><br>
         <select name="bodyfile" id="bodyfile" required></select><br><br>
 
+        <label for="status">Send Emails to Status:</label><br>
+        <select name="status" id="status">
+            <option value="">None</option>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Active">Active</option>
+        </select><br><br>
+
         <button type="submit" name="sendEmails">Send Emails</button>
         <p id="emailMessage"></p>
-    </form>
-
-    <h2>Upload CSV File</h2>
-    <form id="uploadCsvForm" enctype="multipart/form-data">
-        <input type="file" name="csvfileUpload" accept=".csv" required>
-        <button type="button" id="uploadCsvButton">Upload CSV</button>
-        <p id="csvMessage"></p>
-    </form>
-
-    <h2>Upload Email Body File</h2>
-    <form id="uploadBodyForm" enctype="multipart/form-data">
-        <input type="file" name="bodyfileUpload" accept=".php" required>
-        <button type="button" id="uploadBodyButton">Upload Body File</button>
-        <p id="bodyMessage"></p>
     </form>
 
     <h2>Email Body Preview</h2>
