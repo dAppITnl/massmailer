@@ -57,7 +57,7 @@ if (isset($_GET['getFiles'])) {
     exit;
 }
 
-// API to fetch and process the selected body file
+// API to fetch body file content
 if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
     $file = basename($_GET['file']);
     $filePath = $bodyFilesPath . $file;
@@ -77,76 +77,6 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
         echo json_encode(['status' => 'error', 'message' => 'File not found.']);
     }
     exit;
-}
-
-// Handle email sending
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
-    $from = "support.mis@checkCas.com";
-    $email_subject = $_POST['subject'];
-    $statusFilter = $_POST['status'];
-    $selectedBodyFile = $_POST['bodyfile'];
-    $csvFile = $emailListsPath . $_POST['csvfile'];
-    $startDate = $_POST['startDate']; // Get the start date from the form
-    $emailCount = 0;
-    $sentEmails = [];
-
-    if (!empty($statusFilter) && !empty($email_subject)) {
-        if (file_exists($csvFile) && !empty($selectedBodyFile)) {
-            $bodyTemplate = file_get_contents($bodyFilesPath . $selectedBodyFile);
-            if ($bodyTemplate === false) {
-                echo "<p>Failed to read the body file.</p>";
-                exit;
-            }
-
-            $ignoredEmails = getIgnoredEmails($ignoreFile);
-            $timestamp = date('dMy_Hi');
-            $logFileName = $statusFilter . "_" . $timestamp . "_sent.txt";
-            $logFilePath = __DIR__ . "/" . $logFileName;
-
-            $handle = fopen($csvFile, 'r');
-            if ($handle) {
-                fgetcsv($handle); // Skip the header line
-
-                while (($row = fgetcsv($handle)) !== false) {
-                    [$sponsor, $campaign, $firstName, $lastName, $email, $phone, $address, $city, $state, $zip, $status, $rating, $ip, $dateJoined] = $row;
-
-                    // Convert CSV date to comparable format
-                    $dateJoinedFormatted = date('Y-m-d', strtotime($dateJoined));
-
-                    // Filter by ignored emails and date
-                    if (in_array($email, $ignoredEmails)) continue;
-                    if (trim($status) !== $statusFilter) continue;
-                    if ($dateJoinedFormatted >= $startDate) continue; // Skip if dateJoined is on or after startDate
-
-                    // Personalize email
-                    $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject) . " 🌟";
-                    $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
-
-                    // Send email
-                    $headers = "From: $from\r\n";
-                    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-                    if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
-                        $emailCount++;
-                        $sentEmails[] = $email;
-                    }
-                    usleep(100000);
-                }
-                fclose($handle);
-
-                if (!empty($sentEmails)) {
-                    file_put_contents($logFilePath, implode(PHP_EOL, $sentEmails));
-                    echo "<p>Log file created: $logFilePath</p>";
-                }
-                echo "<p>Emails sent successfully: $emailCount</p>";
-            } else {
-                echo "<p>Failed to open the CSV file.</p>";
-            }
-        } else {
-            echo "<p>Please upload the required CSV file and select a body file.</p>";
-        }
-    } else {
-        echo "<p>Please select a status or leave it empty to send to all rows.</p>";
-    }
 }
 ?>
 
@@ -179,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
             const select = document.getElementById(selectId);
             if (!select) return;
 
-            select.innerHTML = '<option value="">-- Select a File --</option>'; // Clear existing options
+            select.innerHTML = '<option value="">-- Select a File --</option>';
             files.forEach(file => {
                 const option = document.createElement("option");
                 option.value = file;
@@ -192,9 +122,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
             document.getElementById('bodyfile').addEventListener('change', function() {
                 let selectedFile = this.value;
                 if (selectedFile) {
-                    document.getElementById('bodyIframe').src = 'bodyfiles/' + encodeURIComponent(selectedFile);
+                    fetch(`?getBodyFile=1&file=${encodeURIComponent(selectedFile)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === "success") {
+                                document.getElementById("bodyPreview").innerHTML = data.content;
+                                document.getElementById("subject").value = data.subject;
+                            } else {
+                                document.getElementById("bodyPreview").innerHTML = "<p style='color:red;'>Error loading file.</p>";
+                            }
+                        })
+                        .catch(error => console.error("Error loading body file:", error));
                 } else {
-                    document.getElementById('bodyIframe').src = ''; // Clear iframe when no file is selected
+                    document.getElementById("bodyPreview").innerHTML = "";
                 }
             });
         });
@@ -227,15 +167,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
     </form>
 
     <h2>Upload CSV File</h2>
-    <form action="" method="post" enctype="multipart/form-data">
+    <form id="uploadCsvForm" method="post" enctype="multipart/form-data">
         <input type="file" name="csvfileUpload" required>
-        <button type="submit">Upload CSV</button>
+        <button type="button" id="uploadCsvButton">Upload CSV</button>
+        <p id="csvMessage"></p>
     </form>
 
     <h2>Upload Email Body File</h2>
-    <form action="" method="post" enctype="multipart/form-data">
+    <form id="uploadBodyForm" method="post" enctype="multipart/form-data">
         <input type="file" name="bodyfileUpload" required>
-        <button type="submit">Upload Body</button>
+        <button type="button" id="uploadBodyButton">Upload Body</button>
+        <p id="bodyMessage"></p>
     </form>
 
     <h2>Email Body Preview</h2>
