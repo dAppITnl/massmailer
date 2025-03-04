@@ -49,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['bodyfileUpload'])) {
 
 // API to get file lists
 if (isset($_GET['getFiles'])) {
+    header('Content-Type: application/json');
     echo json_encode([
         'csvFiles' => getFiles($emailListsPath, "*.csv"),
         'bodyFiles' => getFiles($bodyFilesPath, "body_*.php")
@@ -155,6 +156,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['sendEmails'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSV Email Sender</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            refreshFileLists();
+        });
+
+        function refreshFileLists() {
+            fetch('?getFiles=true')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.csvFiles && data.bodyFiles) {
+                        populateSelect("csvfile", data.csvFiles);
+                        populateSelect("bodyfile", data.bodyFiles);
+                    } else {
+                        console.error("Invalid data received:", data);
+                    }
+                })
+                .catch(error => console.error("Error fetching files:", error));
+        }
+
+        function populateSelect(selectId, files) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+
+            select.innerHTML = '<option value="">-- Select a File --</option>'; // Clear existing options
+            files.forEach(file => {
+                const option = document.createElement("option");
+                option.value = file;
+                option.textContent = file;
+                select.appendChild(option);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('bodyfile').addEventListener('change', function() {
+                let selectedFile = this.value;
+                if (selectedFile) {
+                    document.getElementById('bodyIframe').src = 'bodyfiles/' + encodeURIComponent(selectedFile);
+                } else {
+                    document.getElementById('bodyIframe').src = ''; // Clear iframe when no file is selected
+                }
+            });
+        });
+    </script>
 </head>
 <body>
     <h1>CSV Email Sender</h1>
