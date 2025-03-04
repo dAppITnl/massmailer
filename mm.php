@@ -107,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Skip the header line
                 fgetcsv($handle);
 
+                echo "<p>Sending:";
                 while (($row = fgetcsv($handle)) !== false) {
                     // Map CSV columns to variables
                     // Sponsor,Campaign,First Name,Last Name,E-mail,Phone,Address,City,State,Zip,Status,Rating,IP,Date
@@ -115,11 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     //[$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
 
                     // Check if the email should be skipped
-                    if (in_array($email, $ignoredEmails)) {
-                        continue;
-                    }
-
-                    if (strtotime($dateJoined) >= strtotime($startDate)) {
+                    if ((in_array($email, $ignoredEmails)) || (strtotime($dateJoined) >= strtotime($startDate))) {
+                        echo "-";
                         continue;
                     }
 
@@ -135,12 +133,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
                             $emailCount++;
                             $sentEmails[] = $email; // Track the sent email
+                            echo "s";
+                        } else {
+                            echo "E";
                         }
 
                         usleep(100000); // Sleep for 100,000 microseconds = 0.1 seconds
                     }
                 }
                 fclose($handle);
+                echo "DONE</p>";
 
                 // Save sent emails to a log file
                 if (!empty($sentEmails)) {
