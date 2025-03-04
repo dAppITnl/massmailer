@@ -119,6 +119,18 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            refreshFileLists();
+
+            document.getElementById('uploadCsvButton').addEventListener('click', function() {
+                let formData = new FormData(document.getElementById('uploadCsvForm'));
+                uploadFile(formData, document.getElementById('csvMessage'));
+            });
+
+            document.getElementById('uploadBodyButton').addEventListener('click', function() {
+                let formData = new FormData(document.getElementById('uploadBodyForm'));
+                uploadFile(formData, document.getElementById('bodyMessage'));
+            });
+
             document.getElementById('bodyfile').addEventListener('change', function() {
                 let selectedFile = this.value;
                 if (selectedFile) {
