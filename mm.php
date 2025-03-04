@@ -78,6 +78,82 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
     }
     exit;
 }
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $from = "support.mis@checkCas.com";
+    $email_subject = $_POST['subject'];
+    $statusFilter = $_POST['status'];
+    $selectedBodyFile = $_POST['bodyfile'];
+    $csvFile = $_FILES['csvfile']['tmp_name'];
+    $emailCount = 0;
+    $sentEmails = [];
+
+    if (!empty($statusFilter) && !empty($email_subject)) {
+        if (is_uploaded_file($csvFile) && !empty($selectedBodyFile)) {
+            $bodyTemplate = file_get_contents(__DIR__ . "/" . $selectedBodyFile);
+            if ($bodyTemplate === false) {
+                echo "<p>Failed to read the body file.</p>";
+                exit;
+            }
+
+            // Generate log file name
+            $timestamp = date('dMy_Hi');
+            $logFileName = $statusFilter . "_" . $timestamp . "_sent.txt";
+            $logFilePath = __DIR__ . "/" . $logFileName;
+
+            $handle = fopen($csvFile, 'r');
+            if ($handle) {
+                // Skip the header line
+                fgetcsv($handle);
+
+                while (($row = fgetcsv($handle)) !== false) {
+                    // Map CSV columns to variables
+                    // Sponsor,Campaign,First Name,Last Name,E-mail,Phone,Address,City,State,Zip,Status,Rating,IP,Date
+                    //[$sponsor,$campaign,$firstName,$lastName,$email,$phone,$address,$city,$state,$zip,$status,$rating,$ip,$date] = $row;
+                    // Username,First Name,Last Name,E-mail,Phone,Program,Status,Date Joined
+                    [$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
+
+                    // Check if the email should be skipped
+                    if (in_array($email, $ignoredEmails)) {
+                        continue;
+                    }
+
+                    // Only send emails for rows with the selected status
+                    if (trim($status) === $statusFilter) {
+                        // Replace placeholders in subject and body
+                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject) . " 🌟";
+                        $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
+
+                        // Send the email
+                        $headers = "From: $from\r\n";
+                        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+                        if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
+                            $emailCount++;
+                            $sentEmails[] = $email; // Track the sent email
+                        }
+
+                        usleep(100000); // Sleep for 100,000 microseconds = 0.1 seconds
+                    }
+                }
+                fclose($handle);
+
+                // Save sent emails to a log file
+                if (!empty($sentEmails)) {
+                    file_put_contents($logFilePath, implode(PHP_EOL, $sentEmails));
+                    echo "<p>Log file created: $logFilePath</p>";
+                }
+
+                echo "<p>Emails sent successfully: $emailCount</p>";
+            } else {
+                echo "<p>Failed to open the CSV file.</p>";
+            }
+        } else {
+            echo "<p>Please upload the required CSV file and select a body file.</p>";
+        }
+    } else {
+        echo "<p>Please select a status or leave it empty to send to all rows.</p>";
+    }
+}
 ?>
 
 <!DOCTYPE html>
