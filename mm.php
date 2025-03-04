@@ -85,13 +85,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $statusFilter = $_POST['status'];
     $startDate = $_POST['startDate'];
     $selectedBodyFile = $_POST['bodyfile'];
-    $csvFile = $_FILES['csvfile']['tmp_name'];
+    $csvFile = $_POST['csvfile'];
     $emailCount = 0;
     $sentEmails = [];
 
     if (!empty($statusFilter) && !empty($email_subject)) {
-        if (is_uploaded_file($csvFile) && !empty($selectedBodyFile)) {
-            $bodyTemplate = file_get_contents(__DIR__ . "/" . $selectedBodyFile);
+        if (!empty($csvFile) && !empty($selectedBodyFile)) {
+            $bodyTemplate = file_get_contents($bodyFilesPath . $selectedBodyFile);
             if ($bodyTemplate === false) {
                 echo "<p>Failed to read the body file.</p>";
                 exit;
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $logFileName = $statusFilter . "_" . $timestamp . "_sent.txt";
             $logFilePath = __DIR__ . "/" . $logFileName;
 
-            $handle = fopen($csvFile, 'r');
+            $handle = fopen($emailListsPath . $csvFile, 'r');
             if ($handle) {
                 // Skip the header line
                 fgetcsv($handle);
