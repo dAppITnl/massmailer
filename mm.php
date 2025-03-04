@@ -118,6 +118,29 @@ if (isset($_GET['getBodyFile']) && !empty($_GET['file'])) {
             });
         }
 
+        function uploadFile(formData, messageElement) {
+            messageElement.innerHTML = "Processing...";
+            messageElement.style.color = "blue";
+
+            fetch('', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                messageElement.innerHTML = result.message;
+                messageElement.style.color = result.status === 'success' ? 'green' : 'red';
+                if (result.status === 'success') {
+                    refreshFileLists();
+                }
+            })
+            .catch(error => {
+                messageElement.innerHTML = 'Error uploading file.';
+                messageElement.style.color = 'red';
+                console.error('Upload error:', error);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             refreshFileLists();
 
