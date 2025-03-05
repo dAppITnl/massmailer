@@ -106,11 +106,12 @@ $email = isset($_GET['email']) ? $_GET['email'] : '?';
                 <li><strong>Phone interviewed Leads:</strong> in Real time, for Business opportunity seekers and Sparky follow up immediately</li>
                 <li><strong>Builder tools:</strong> like MSI - concierge Service and Reach - Outbound Dialer to Home/Business owners</li>
             </ul>
-            <p><a href="https://media.checkcas.com/phg/videos/SG-NEWSparkyAIMembershipsExplained-WhyTheyreWorthIt-3mar25.mp4" target="_blank">
-                <div style="text-align: center;">
-                    <img alt="Promo Plans,Packs,Reach" src="https://media.checkcas.com/phg/images/PHG-Promo-Rotating-4mar25.gif" style="width: 90%;" /><br><small>Click image for an explaining video</small>
-                </div>
-            </a></p>
+            <p style="text-align: center;">
+                <a href="https://media.checkcas.com/phg/videos/SG-NEWSparkyAIMembershipsExplained-WhyTheyreWorthIt-3mar25.mp4" target="_blank">
+                    <img alt="Promo Plans,Packs,Reach" src="https://media.checkcas.com/phg/images/PHG-Promo-Rotating-4mar25.gif" style="width: 90%;" />
+                </a><br>
+                <small><a href="https://media.checkcas.com/phg/videos/SG-NEWSparkyAIMembershipsExplained-WhyTheyreWorthIt-3mar25.mp4" target="_blank">Click (image) for an explaining video</a></small>
+            </p>
             
             <p>This is your chance to reignite your journey with PHG and take advantage of these incredible updates. Don’t miss out on the opportunity to grow your income and achieve your goals with our enhanced platform.</p>
             <div class="cta">
