@@ -280,6 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <option value="">None</option>
             <option value="Unpaid">Unpaid</option>
             <option value="Active">Active</option>
+            <option value="Personal">Personal</option>
         </select><br><br>
 
         <label for="startDate">Ignore rows where Date is on or after:</label><br>
