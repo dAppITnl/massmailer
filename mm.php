@@ -114,10 +114,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 echo "<p>Sending:";
                 while (($row = fgetcsv($handle)) !== false) {
-                    echo $row."<br>";
+                    echo "<br>".$emailCount.":".implode(",", $row)."->";
                     // Map CSV columns to variables
                     // Sponsor,Campaign,First Name,Last Name,E-mail,Phone,Address,City,State,Zip,Status,Rating,IP,Date
                     [$sponsor,$campaign,$firstName,$lastName,$email,$phone,$address,$city,$state,$zip,$status,$rating,$ip,$dateJoined] = $row;
+                    echo $email.",".$dateJoined.",".$status.",".$firstName."=>";
                     // Username,First Name,Last Name,E-mail,Phone,Program,Status,Date Joined
                     //[$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
 
