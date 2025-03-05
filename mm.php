@@ -136,6 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         // Replace placeholders in subject and body
                         $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject);
                         $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
+                        $personalizedBody = str_replace('[[Email]]', $email, $personalizedBody);
 
                         // Send the email
                         $headers = "From: $from\r\n";
@@ -272,9 +273,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <h1>CSV Email Sender</h1>
 
     <form id="emailForm" action="" method="post">
-        <label>Subject:</label><br>
-        <input type="text" id="subject" name="subject" size="75" required><br><br>
-
         <label for="status">Send Emails to Status:</label><br>
         <select name="status" id="status">
             <option value="">None</option>
@@ -290,6 +288,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <label>Select Email Body File:</label><br>
         <select name="bodyfile" id="bodyfile" required></select><br><br>
+
+        <label>Subject:</label><br>
+        <input type="text" id="subject" name="subject" size="75" required><br><br>
 
         <button type="submit" name="sendEmails">Send Emails</button>
     </form>
