@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         }
 
                         usleep(100000); // Sleep for 100,000 microseconds = 0.1 seconds
-                    } esle {
+                    } else {
                         echo "x";
                     }
                 }
