@@ -107,6 +107,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $logFileName = $statusFilter . "_" . $timestamp . "_sent.txt";
             $logFilePath = __DIR__ . "/" . $logFileName;
 
+            $ignoredEmails = getIgnoredEmails($ignoreFile);
+            echo "ignoredEmails: ".implode(",",$ignoredEmails)."<br>";
+
             $handle = fopen($emailListsPath . $csvFile, 'r');
             if ($handle) {
                 // Skip the header line
