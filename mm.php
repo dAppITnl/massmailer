@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
 
                     // Only send emails for rows with the selected status
-                    if (strtolower(trim($status)) === strtolower($statusFilter)) {
+                    if (strtolower(trim($status)) == strtolower($statusFilter)) {
                         // Replace placeholders in subject and body
                         $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject);
                         $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
@@ -278,9 +278,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <label for="status">Send Emails to Status:</label><br>
         <select name="status" id="status">
             <option value="">None</option>
-            <option value="Unpaid">Unpaid</option>
-            <option value="Active">Active</option>
-            <option value="Personal">Personal</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="active">Active</option>
+            <option value="personal">Personal</option>
         </select><br><br>
 
         <label for="startDate">Ignore rows where Date is on or after:</label><br>
