@@ -89,6 +89,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $emailCount = 0;
     $sentEmails = [];
 
+    echo "subject: ".$email_subject."<br>";
+    echo "statusFilter: ".$statusFilter."<br>";
+    echo "startDate: ".$startDate."<br>";
+    echo "selectedBodyFile: ".$selectedBodyFile."<br>";
+    echo "csvFile: ".$csvFile."<br>";
     if (!empty($statusFilter) && !empty($email_subject)) {
         if (!empty($csvFile) && !empty($selectedBodyFile)) {
             $bodyTemplate = file_get_contents($bodyFilesPath . $selectedBodyFile);
@@ -109,6 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 echo "<p>Sending:";
                 while (($row = fgetcsv($handle)) !== false) {
+                    echo $row."<br>";
                     // Map CSV columns to variables
                     // Sponsor,Campaign,First Name,Last Name,E-mail,Phone,Address,City,State,Zip,Status,Rating,IP,Date
                     [$sponsor,$campaign,$firstName,$lastName,$email,$phone,$address,$city,$state,$zip,$status,$rating,$ip,$dateJoined] = $row;
@@ -124,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     // Only send emails for rows with the selected status
                     if (trim($status) === $statusFilter) {
                         // Replace placeholders in subject and body
-                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject) . " 🌟";
+                        $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject);
                         $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
 
                         // Send the email
