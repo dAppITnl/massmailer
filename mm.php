@@ -104,8 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Generate log file name
             $timestamp = date('dMy_Hi');
-            $logFileName = $statusFilter . "_" . $timestamp . "_sent.txt";
-            $logFilePath = __DIR__ . "/" . $logFileName;
+            $logFileName = $statusFilter . "-" . str_replace('-','',$startDate) . '-' . $selectedBodyFile . "-" . $timestamp . "_sent.txt";
+            $logFilePath = __DIR__ . "/log/" . $logFileName;
 
             $ignoredEmails = getIgnoredEmails($ignoreFile);
             echo "ignoredEmails: ".implode(",",$ignoredEmails)."<br>";
