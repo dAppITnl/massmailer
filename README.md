@@ -5,6 +5,8 @@ Do:
   create bodyfile -> bodyfiles
   create browser vs -> emails and opload to media.checkcas.com/phg/emails (if referenced in the bodyfile)
 
+Check $row line , status value in CSV
+
 Open https://massmailer.checkcas.com/mm.php
   Upload CSV and Body files
   Status: Personal
