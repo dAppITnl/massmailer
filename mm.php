@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
 
                     // Only send emails for rows with the selected status
-                    if (trim($status) === $statusFilter) {
+                    if (strtolower(trim($status)) === strtolower($statusFilter)) {
                         // Replace placeholders in subject and body
                         $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject);
                         $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
