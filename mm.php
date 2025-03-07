@@ -116,6 +116,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 fgetcsv($handle);
 
                 echo "<p>Sending:";
+
+                // send to myself first
+                $firstName = "TestCas";
+                $email = "cas.test@checkCas.com";
+                $personalizedSubject = str_replace('[[FirstName]]', $firstName, $email_subject);
+                $personalizedBody = str_replace('[[FirstName]]', $firstName, $bodyTemplate);
+                $personalizedBody = str_replace('[[Email]]', $email, $personalizedBody);
+                // Send the email
+                $headers = "From: $from\r\n";
+                $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+                if (mail($email, $personalizedSubject, $personalizedBody, $headers)) {
+                    $emailCount++;
+                    $sentEmails[] = $email; // Track the sent email
+                    echo "S";
+                } else {
+                    echo "E";
+                }
+
+                usleep(100000); // Sleep for 100,000 microseconds = 0.1 seconds
+
                 while (($row = fgetcsv($handle)) !== false) {
                     //echo "<br>".$emailCount.":".implode(",", $row)."->";
                     // Map CSV columns to variables
@@ -146,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             $sentEmails[] = $email; // Track the sent email
                             echo "s";
                         } else {
-                            echo "E";
+                            echo "e";
                         }
 
                         usleep(100000); // Sleep for 100,000 microseconds = 0.1 seconds

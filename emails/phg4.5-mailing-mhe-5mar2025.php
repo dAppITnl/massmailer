@@ -93,9 +93,9 @@ $email = isset($_GET['email']) ? $_GET['email'] : '?';
             <h2>Here’s what’s waiting for you:</h2>
             <ul>
                 <li><strong>New Membership Levels:</strong> Choose from:
-                <ul><li><strong>Plus:</strong> $20-first month, $50 ($20 if MSI) per month, <strong><u>25</u> leads</strong></li>
-                    <li><strong>Pro:</strong> $50-first month, $100 ($50 if MSI) per month, <strong><u>100</u> (<u>150</u> PROMO) leads</strong></li>
-                    <li><strong>Elite:</strong> $200-first month, $250($200 if MSI) per month, <strong><u>500</u> (<u>750</u> PROMO) leads</strong></li>
+                <ul><li><strong>Plus:</strong> $20-first month, $50 ($20 if MSI) and <strong><u>25</u> leads</strong> per month</li>
+                    <li><strong>Pro:</strong> $50-first month, $100 ($50 if MSI) and <strong><u>100</u> (<u>150</u> PROMO) leads</strong> per month</li>
+                    <li><strong>Elite:</strong> $200-first month, $250($200 if MSI) and <strong><u>500</u> (<u>750</u> PROMO) leads</strong> per month</li>
                 </ul>MSI = when all core Multi-Stream Income Opportunities are joined in first 30 days. Start small and upgrade anytime to unlock even more benefits!</li>
                 <li><strong>New Companies:</strong> We add asap <strong>two new core companies</strong> to our platform, alongside our existing offerings like <strong>Savings Highway Global</strong>, <strong>Live Good</strong>, and <strong>Reach Solar</strong>. Each is more appealing to join as well.</li>
                 <li><strong>Improved Ad Co-op Packages:</strong> Boost your reach with revamped ad co-op packages designed to funnel high-quality leads directly to you!<br>We even call your USA leads—whether home or business owners—for Solar interest from the Platinum Pack!</li>
