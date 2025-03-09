@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     //[$username, $firstName, $lastName, $email, $phone, $program, $status, $dateJoined] = $row;
 
                     // Check if the email should be skipped
-                    if ((in_array($email, $ignoredEmails)) || (strtotime($dateJoined) < strtotime($startDate))) {
+                    if ((in_array($email, $ignoredEmails)) || (strtotime($dateJoined) >= strtotime($startDate))) {
                         echo "-";
                         continue;
                     }
